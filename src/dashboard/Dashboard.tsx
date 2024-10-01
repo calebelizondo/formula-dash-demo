@@ -1,11 +1,15 @@
 import { FunctionComponent, useState, useEffect } from "react";
 import _ from "lodash";
 import { Responsive, WidthProvider } from "react-grid-layout";
-import "react-grid-layout/css/styles.css";
-import "react-resizable/css/styles.css";
+//import "./../node_modules/react-grid-layout/css/styles.css";
+import "./../../node_modules/react-grid-layout/css/styles.css";
+//import "react-resizable/css/styles.css";
+import "./../../node_modules/react-resizable/css/styles.css";
 import "./styles.css";
+import { HANDLES } from "../widgets/consts";
+import BaseWidget from "../widgets/widget_base/BaseWidget";
 
-interface Props {
+interface DashboardProps {
   domElements: any[];
   className?: string;
   rowHeight?: number;
@@ -17,7 +21,7 @@ interface Props {
 
 const ResponsiveReactGridLayout = WidthProvider(Responsive);
 
-const DropDrag: FunctionComponent<Props> = (props) => {
+const Dashboard: FunctionComponent<DashboardProps> = (props) => {
   const [layouts, setLayouts] = useState<{ [index: string]: any[] }>({
     lg: _.map(_.range(0, 25), function (item, i) {
       var y = Math.ceil(Math.random() * 4) + 1;
@@ -27,13 +31,15 @@ const DropDrag: FunctionComponent<Props> = (props) => {
         w: 2,
         h: y,
         i: i.toString(),
-        static: Math.random() < 0.05
+        static: false,//Math.random() < 0.05,
+        resizeHandles: [],
       };
     })
   });
   const [currentBreakpoint, setCurrentBreakpoint] = useState<string>("lg");
   const [compactType, setCompactType] = useState<"vertical" | "horizontal" | null | undefined >("vertical");
   const [mounted, setMounted] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<string | null>(null);
   const [toolbox, setToolbox] = useState<{ [index: string]: any[] }>({
     lg: []
   });
@@ -47,6 +53,18 @@ const DropDrag: FunctionComponent<Props> = (props) => {
     setToolbox({
       ...toolbox,
       [breakpoint]: toolbox[breakpoint] || toolbox[currentBreakpoint] || []
+    });
+  };
+
+  const onItemClick = (itemId: string) => {
+    setSelectedItem(itemId);
+    setLayouts(prevLayouts => {
+      const newLayouts = { ...prevLayouts };
+      newLayouts.lg = newLayouts.lg.map(item => ({
+        ...item,
+        resizeHandles: item.i === itemId ? HANDLES : []
+      }));
+      return newLayouts;
     });
   };
 
@@ -79,10 +97,12 @@ const DropDrag: FunctionComponent<Props> = (props) => {
   const generateDOM = () => {
     return _.map(layouts.lg, function (l, i) {
       return (
+
         <div
           key={i}
           style={{ background: "#ccc" }}
           className={l.static ? "static" : ""}
+          onClick={() => onItemClick(l.i)}
         >
           {l.static ? (
             <span
@@ -110,10 +130,10 @@ const DropDrag: FunctionComponent<Props> = (props) => {
         Droppable Element (Drag me!)
       </div>
 
-      <div className="mb-4">
+      <div className="mb-4" /*onClick={() => setSelectedItem(null)}*/>
         <ResponsiveReactGridLayout
           {...props}
-          style={{ background: "#f0f0f0" }}
+          style={{ background: "#ffffff" }}
           layouts={layouts}
           measureBeforeMount={false}
           useCSSTransforms={mounted}
@@ -131,13 +151,13 @@ const DropDrag: FunctionComponent<Props> = (props) => {
   );
 };
 
-export default DropDrag;
+export default Dashboard;
 
-DropDrag.defaultProps = {
+Dashboard.defaultProps = {
   className: "layout",
-  rowHeight: 30,
+  rowHeight: 8,
   onLayoutChange: (layout: any, layouts: any) => {},
-  cols: { lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 },
+  cols: { lg: 16, md: 12, sm: 8, xs: 4, xxs: 2 },
   breakpoints: { lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 },
   containerPadding: [0, 0]
 };
